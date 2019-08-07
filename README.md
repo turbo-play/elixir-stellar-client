@@ -1,6 +1,10 @@
 # Stellar
 
-An improved [Stellar](https://stellar.org) client for Elixir. This SDK was prepared by the [TurboPlay](https://turboplay.com) dev team as part of our contribution to the Stellar blockchain community. TurboPlay is developing the world's first personalized videogames marketplace with a rewarding loyalty system for players. The SDK includes an XDR generator, which is used to encode/decode all communication with Stellar. We’re using an XDR elixir library, though with a few fixes (https://github.com/sunny-g/xdr). We hope XDR will also accept our changes upstream! We also have custom objects within the stellar sdk specific for all things stellar.
+An improved [Stellar](https://stellar.org) SDK for Elixir. This SDK was prepared by the [TurboPlay](https://turboplay.com) dev team as part of our contribution to the Stellar blockchain community. TurboPlay is developing the world's first personalized videogames marketplace with a rewarding loyalty system for players.
+
+Elixir - now with Stellar transaction signing capability!
+
+The SDK includes an XDR generator, which is used to encode/decode all communication with Stellar. We’re using an XDR elixir library, though with a few fixes (https://github.com/sunny-g/xdr). We hope XDR will also accept our changes upstream! We also have custom objects within the stellar sdk specific for all things stellar.
 
 Please help us by taking a look at our SDK and let us know if you find any issues!
 
