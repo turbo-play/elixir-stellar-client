@@ -1,8 +1,8 @@
-defmodule Stellar.Accounts.IntegrationTest do
-  use Stellar.IntegrationCase
-  alias Stellar.Accounts
+# defmodule Stellar.Accounts.IntegrationTest do
+#   use Stellar.IntegrationCase
+#   alias Stellar.Network.Accounts
 
-  test "get account details", %{public_key: public_key} do
-    assert {:ok, %{"id" => public_key}} = Accounts.get(public_key)
-  end
-end
+#   test "get account details", %{public_key: public_key} do
+#     assert {:ok, %{"id" => public_key}} = Accounts.get(public_key)
+#   end
+# end

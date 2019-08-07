@@ -15,9 +15,9 @@ defmodule Stellar do
   @type asset_type :: :native | :credit_alphanum4 | :credit_alphanum12
 
   @doc """
-  Shows the url to the cconfigured network
+  Shows the url to the configured network
   """
-  def network do
-    Stellar.Base.get_url()
+  def current_network do
+    Stellar.NetworkConfig.current
   end
 end

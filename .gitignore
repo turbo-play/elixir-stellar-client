@@ -24,4 +24,3 @@ stellar-*.tar
 
 /.elixir_ls
 
-/config/*.secret.exs
