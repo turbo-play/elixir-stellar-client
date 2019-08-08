@@ -4,19 +4,17 @@ defmodule Stellar.Base.Account do
 
   defstruct _accountId: nil, sequence: nil
 
-  def new(_, sequence) when not is_bitstring(sequence),
-    do: {:error, "sequence must be of type string"}
+  def new(_, sequence) when not is_integer(sequence),
+    do: {:error, "sequence must be of type integer"}
 
   def new(accountId, sequence) do
-    case StrKey.is_valid_ed25519_public_key(accountId) do
-      true ->
-        %__MODULE__{
-          _accountId: accountId,
-          sequence: sequence |> String.to_integer()
-        }
-
-      _ ->
-        {:error, "accountId is invalid"}
+    if StrKey.is_valid_ed25519_public_key(accountId) do
+      %__MODULE__{
+        _accountId: accountId,
+        sequence: sequence
+      }
+    else
+      {:error, "accountId is invalid"}
     end
   end
 
@@ -25,10 +23,11 @@ defmodule Stellar.Base.Account do
   end
 
   def sequence_number(this) do
-    this.sequence |> Integer.to_string()
+    this.sequence
   end
 
-  def increment_sequence_number(this) do
-    %__MODULE__{this | sequence: this.sequence + 1}
+  def increment_sequence_number(%__MODULE__{} = this) do
+    this
+    |> Map.update(:sequence, 1, &(&1 + 1))
   end
 end

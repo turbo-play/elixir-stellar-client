@@ -1,6 +1,5 @@
 defmodule Stellar.Base.TransactionBuilder do
-  alias Stellar.{XDR, Transaction}
-  alias Stellar.Base.{Memo, Account, KeyPair, Operation}
+  alias Stellar.Base.{Memo, Account, KeyPair, Operation, Transaction}
   require Logger
 
   def timeout_infinite, do: 0
@@ -44,11 +43,14 @@ defmodule Stellar.Base.TransactionBuilder do
     do: {:error, "timeout has been already set - setting timeout would overwrite it"}
 
   def set_timeout(this, 0) do
-    %{this | timeout_set: true}
+    this
+    |> Map.merge(%{timeout_set: true})
   end
 
   def set_timeout(this, timeout) do
-    this = %{this | timeout_set: true}
+    this
+    |> Map.merge(%{timeout_set: true})
+
     timeoutTimestamp = DateTime.to_unix(DateTime.utc_now()) + timeout
 
     this =
@@ -73,70 +75,67 @@ defmodule Stellar.Base.TransactionBuilder do
     do: {:error, "TimeBounds has to be set or you must call set_timeout(timeout_infinite)."}
 
   def build(this) do
-    seq_number =
-      Account.increment_sequence_number(this.source_account)
-      |> Account.sequence_number()
-      |> String.to_integer()
-
-    sourceAccount = KeyPair.from_public_key(this.source_account |> Account.accountId())
-    {:ok, sourceAccountXDR} = sourceAccount |> KeyPair.to_xdr_accountid()
-
-    operations = this.operations |> Enum.map(fn op -> op |> Operation.to_xdr() end)
-
-    {:ok, ext} = Stellar.XDR.Types.DefaultExt.new({0, nil})
-
-    attrs = %Stellar.XDR.Types.Transaction.Transaction{
-      sourceAccount: sourceAccountXDR,
-      fee: this.base_fee * (this.operations |> Enum.count()),
-      seqNum: seq_number,
-      memo: if(this.memo, do: this.memo |> Memo.to_xdr(), else: nil),
-      operations: operations,
-      ext: ext
-    }
-
-    attrs =
-      case this.time_bounds do
-        nil ->
-          attrs
-
-        _ ->
-          mintime =
-            case this.time_bounds.minTime do
-              %DateTime{} = t -> DateTime.to_unix(t)
-              t -> t
-            end
-
-          maxtime =
-            case this.time_bounds.maxTime do
-              %DateTime{} = t -> DateTime.to_unix(t)
-              t -> t
-            end
-
-          with {:ok, mintime} <- Stellar.XDR.Types.UInt64.new(mintime),
-               {:ok, maxtime} <- Stellar.XDR.Types.UInt64.new(maxtime),
-               {:ok, timebounds} <-
-                 %Stellar.XDR.Types.Transaction.TimeBounds{minTime: mintime, maxTime: maxtime}
-                 |> Stellar.XDR.Types.Transaction.TimeBounds.new() do
-            %{attrs | timeBounds: timebounds}
-          else
-            _ -> attrs
-          end
-      end
-
-    # XDR verify transaction
-    {:ok, xdr_transaction} = Stellar.XDR.Types.Transaction.Transaction.new(attrs)
-
-    # create XDR envelope and create a new transaction from the envelope
-    {:ok, xenv} =
-      %Stellar.XDR.Types.Transaction.TransactionEnvelope{tx: xdr_transaction, signatures: []}
-      |> Stellar.XDR.Types.Transaction.TransactionEnvelope.new()
-
-    tx = Transaction.new(xenv)
-
-    # return XDR validated transaction
-    tx
+    with updated_source_account <- Account.increment_sequence_number(this.source_account),
+         {:ok, xdr_transaction} <-
+           build_transaction_xdr(this, updated_source_account),
+         {:ok, xenv} <- build_transaction_envelope(xdr_transaction),
+         %Transaction{} = tx <- Transaction.new(xenv) do
+      {:ok, tx, updated_source_account}
+    end
   end
 
   def build(_, _),
     do: {:error, "TimeBounds has to be set or you must call set_timeout(timeout_infinite)."}
+
+  defp build_transaction_xdr(this, source_account) do
+    with {:ok, sourceAccountXDR} <- get_source_account_xdr(source_account),
+         {:ok, ext} <- Stellar.XDR.Types.DefaultExt.new({0, nil}) do
+      %Stellar.XDR.Types.Transaction.Transaction{
+        sourceAccount: sourceAccountXDR,
+        fee: calculate_transaction_fee(this),
+        seqNum: source_account |> Account.sequence_number(),
+        memo: this.memo |> Memo.to_xdr(),
+        operations: this.operations |> Enum.map(fn op -> op |> Operation.to_xdr() end),
+        ext: ext
+      }
+      |> Map.merge(extract_time_bounds(this))
+      |> Stellar.XDR.Types.Transaction.Transaction.new()
+    end
+  end
+
+  defp build_transaction_envelope(xdr_transaction) do
+    %Stellar.XDR.Types.Transaction.TransactionEnvelope{tx: xdr_transaction, signatures: []}
+    |> Stellar.XDR.Types.Transaction.TransactionEnvelope.new()
+  end
+
+  defp extract_time_bounds(%{time_bounds: %{minTime: minTime, maxTime: maxTime}}) do
+    with {:ok, mintime} <- process_time(minTime),
+         {:ok, maxtime} <- process_time(maxTime),
+         {:ok, timebounds} <-
+           %Stellar.XDR.Types.Transaction.TimeBounds{minTime: mintime, maxTime: maxtime}
+           |> Stellar.XDR.Types.Transaction.TimeBounds.new() do
+      %{timeBounds: timebounds}
+    end
+  end
+
+  defp extract_time_bounds(_), do: %{}
+
+  defp calculate_transaction_fee(this) do
+    this.base_fee * (this.operations |> Enum.count())
+  end
+
+  defp process_time(time) do
+    case time do
+      %DateTime{} = t -> DateTime.to_unix(t)
+      t -> t
+    end
+    |> Stellar.XDR.Types.UInt64.new()
+  end
+
+  defp get_source_account_xdr(source_account) do
+    source_account
+    |> Account.accountId()
+    |> KeyPair.from_public_key()
+    |> KeyPair.to_xdr_accountid()
+  end
 end

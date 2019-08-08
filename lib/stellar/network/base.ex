@@ -23,8 +23,7 @@ defmodule Stellar.Network.Base do
   end
 
   def get_url() do
-    network = Application.get_env(:stellar, :network, :public)
-    get_network_url(network)
+    current() |> get_network_url()
   end
 
   def current() do
@@ -35,6 +34,17 @@ defmodule Stellar.Network.Base do
   def get_network_url(:public), do: "https://horizon.stellar.org"
   def get_network_url(:local), do: "http://localhost:8004"
   def get_network_url(url) when is_binary(url), do: url
+
+  def network_passphrase(:public), do: "Public Global Stellar Network ; September 2015"
+  def network_passphrase(:test), do: "Test SDF Network ; September 2015"
+  def network_passphrase(:local), do: "Integration Test Network ; zulucrypto"
+
+  def network_passphrase(url) when is_binary(url),
+    do: Application.get_env(:stellar, :passphrase, network_passphrase(:test))
+
+  def network_id() do
+    :crypto.hash(:sha256, current() |> network_passphrase())
+  end
 
   def process_query_params([]), do: ""
   def process_query_params(params), do: "?" <> URI.encode_query(params)

@@ -93,6 +93,7 @@ defmodule Stellar.Base.Operation.Test do
         destination: "GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ",
         amount: 1000.0,
         # @TODO: test w/ asset 'USDUSD','GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7'
+        # asset: Asset.new("USDUSD", "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7")
         asset: Asset.native()
       }
 
@@ -140,7 +141,7 @@ defmodule Stellar.Base.Operation.Test do
       destination = "GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ"
 
       dest_asset =
-        Stellar.Base.Asset.new(
+        Asset.new(
           "USD",
           "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7"
         )
@@ -148,11 +149,11 @@ defmodule Stellar.Base.Operation.Test do
       dest_amount = 3.1415000
 
       path = [
-        Stellar.Base.Asset.new(
+        Asset.new(
           "USD",
           "GBBM6BKZPEHWYO3E3YKREDPQXMS4VK35YLNU7NFBRI26RAN7GI5POFBB"
         ),
-        Stellar.Base.Asset.new(
+        Asset.new(
           "EUR",
           "GDTNXRLOJD2YEBPKK7KCMR7J33AAG5VZXHAJTHIG736D6LVEFLLLKPDL"
         )
@@ -254,6 +255,11 @@ defmodule Stellar.Base.Operation.Test do
       }
 
       assert {:error, _} = Operation.allow_trust(attrs)
+    end
+  end
+
+  describe "change trust" do
+    test "create changeTrustOp" do
     end
   end
 

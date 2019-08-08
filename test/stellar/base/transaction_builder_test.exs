@@ -5,13 +5,13 @@ defmodule Stellar.Base.TransactionBuilder.Test do
 
   describe "transaction builder" do
     setup do
-      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", "0")
+      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", 0)
       destination = "GDJJRRMBK4IWLEPJGIE6SXD2LP7REGZODU7WDC3I2D6MR37F4XSHBKX2"
       amount = 1000
       asset = Asset.native()
       memo = Memo.id(100)
 
-      transaction =
+      {:ok, transaction, updated_account} =
         TransactionBuilder.new(source, [{:fee, 100}])
         |> TransactionBuilder.add_operation(
           Operation.payment(%{
@@ -30,7 +30,8 @@ defmodule Stellar.Base.TransactionBuilder.Test do
         amount: amount,
         asset: asset,
         memo: memo,
-        transaction: transaction
+        transaction: transaction,
+        updated_account: updated_account
       }
     end
 
@@ -47,15 +48,11 @@ defmodule Stellar.Base.TransactionBuilder.Test do
       assert t.sequence == 1
     end
 
-    # @TODO: we're currently failing this one because
-    # the Account struct is not updated, we just get a new sequence
-    # number for the transaction and carry on.. 
-    # not sure this is relevant for Elixir / functional programming..
-    # test "should increment the account's sequence number", %{
-    #   source: s
-    # } do
-    #   assert Account.sequence_number(s) == 1
-    # end
+    test "should increment the account's sequence number", %{
+      updated_account: a
+    } do
+      assert Account.sequence_number(a) == 1
+    end
 
     test "should have one payment operation", %{
       transaction: t
@@ -73,7 +70,7 @@ defmodule Stellar.Base.TransactionBuilder.Test do
 
   describe "constructs a native payment transaction with custom base fee" do
     setup do
-      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", "0")
+      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", 0)
       destination1 = "GDJJRRMBK4IWLEPJGIE6SXD2LP7REGZODU7WDC3I2D6MR37F4XSHBKX2"
       destination2 = "GC6ACGSA2NJGD6YWUNX2BYBL3VM4MZRSEU2RLIUZZL35NLV5IAHAX2E2"
       amount1 = 1000
@@ -81,7 +78,7 @@ defmodule Stellar.Base.TransactionBuilder.Test do
       asset = Asset.native()
       memo = Memo.id(100)
 
-      transaction =
+      {:ok, transaction, _} =
         TransactionBuilder.new(source, [{:fee, 1000}])
         |> TransactionBuilder.add_operation(
           Operation.payment(%{
@@ -120,10 +117,10 @@ defmodule Stellar.Base.TransactionBuilder.Test do
 
   describe "constructs a native payment transaction with integer timebounds" do
     setup do
-      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", "0")
+      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", 0)
       timebounds = %{minTime: 1_455_287_522, maxTime: 1_455_297_545}
 
-      transaction =
+      {:ok, transaction, _} =
         TransactionBuilder.new(source, [{:time_bounds, timebounds}, {:fee, 100}])
         |> TransactionBuilder.add_operation(
           Operation.payment(%{
@@ -149,14 +146,14 @@ defmodule Stellar.Base.TransactionBuilder.Test do
 
   describe "constructs a native payment transaction with date timebounds" do
     setup do
-      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", "0")
+      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", 0)
 
       timebounds = %{
         minTime: 1_528_145_519_000 |> DateTime.from_unix!(:millisecond),
         maxTime: 1_528_231_982_000 |> DateTime.from_unix!(:millisecond)
       }
 
-      transaction =
+      {:ok, transaction, _} =
         TransactionBuilder.new(source, [{:time_bounds, timebounds}, {:fee, 100}])
         |> TransactionBuilder.add_operation(
           Operation.payment(%{
@@ -182,7 +179,7 @@ defmodule Stellar.Base.TransactionBuilder.Test do
 
   describe "set_timeout" do
     test "fails if not set" do
-      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", "0")
+      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", 0)
 
       assert {:error, "TimeBounds has to be set or you must call set_timeout(timeout_infinite)."} =
                TransactionBuilder.new(source, fee: 100)
@@ -197,7 +194,7 @@ defmodule Stellar.Base.TransactionBuilder.Test do
     end
 
     test "timeout negative" do
-      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", "0")
+      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", 0)
 
       assert {:error, "timeout cannot be negative"} =
                TransactionBuilder.new(source, fee: 100)
@@ -212,9 +209,9 @@ defmodule Stellar.Base.TransactionBuilder.Test do
     end
 
     test "sets timebounds" do
-      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", "0")
+      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", 0)
 
-      transaction =
+      {:ok, transaction, _} =
         TransactionBuilder.new(source, fee: 100)
         |> TransactionBuilder.add_operation(
           Operation.payment(%{
@@ -235,7 +232,7 @@ defmodule Stellar.Base.TransactionBuilder.Test do
         maxTime: 1_455_297_545 |> DateTime.from_unix!()
       }
 
-      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", "0")
+      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", 0)
 
       assert {:error, "timeout has been already set - setting timeout would overwrite it"} =
                TransactionBuilder.new(source, time_bounds: timebounds, fee: 100)
@@ -255,9 +252,9 @@ defmodule Stellar.Base.TransactionBuilder.Test do
         maxTime: 0
       }
 
-      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", "0")
+      source = Account.new("GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGSNFHEYVXM3XOJMDS674JZ", 0)
 
-      transaction =
+      {:ok, transaction, _} =
         TransactionBuilder.new(source, time_bounds: timebounds, fee: 100)
         |> TransactionBuilder.add_operation(
           Operation.payment(%{

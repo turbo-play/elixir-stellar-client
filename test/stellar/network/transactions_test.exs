@@ -1,8 +1,6 @@
 defmodule Stellar.Network.Transactions.Test do
   use Stellar.HttpCase
   alias Stellar.Network.Transactions
-  alias Stellar.{TransactionBuilder, Transaction, Operation, Asset, Memo, Account}
-  alias Stellar.XDR.Types.Transaction.{TransactionEnvelope, DecoratedSignatures}
 
   test "get transaction details", %{bypass: bypass} do
     Bypass.expect_once(bypass, "GET", "/transactions/123456", fn conn ->

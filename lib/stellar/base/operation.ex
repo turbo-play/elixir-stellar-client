@@ -246,7 +246,7 @@ defmodule Stellar.Base.Operation do
     %__MODULE__{
       type: type_payment(),
       destination: payment_op.destination |> account_id_to_address(),
-      asset: Asset.native(),
+      asset: payment_op.asset |> Asset.from_xdr(),
       amount: payment_op.amount |> from_xdr_amount()
     }
   end

@@ -18,6 +18,10 @@ defmodule Stellar do
   Shows the url to the configured network
   """
   def current_network do
-    Stellar.NetworkConfig.current
+    Stellar.Network.Base.current()
+  end
+
+  def current_network_id do
+    Stellar.Network.Base.network_id()
   end
 end

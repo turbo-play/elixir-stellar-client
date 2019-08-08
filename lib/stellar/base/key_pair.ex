@@ -28,16 +28,14 @@ defmodule Stellar.Base.KeyPair do
     end
   end
 
+  def new(%{type: :ed25519, public_key: public_key}) when byte_size(public_key) !== 32,
+    do: {:error, "invalid public key"}
+
   def new(%{type: :ed25519, public_key: public_key}) do
-    keypair = %__MODULE__{
+    %__MODULE__{
       type: :ed25519,
       _public_key: public_key
     }
-
-    cond do
-      byte_size(public_key) !== 32 -> {:error, "invalid public key"}
-      true -> keypair
-    end
   end
 
   def new(_), do: {:error, "invalid keys type"}
@@ -93,10 +91,11 @@ defmodule Stellar.Base.KeyPair do
   end
 
   def signature_hint(this) do
-    {:ok, a} = this |> __MODULE__.to_xdr_accountid()
-    {:ok, key} = a |> Stellar.XDR.Types.PublicKey.encode()
-    keylength = byte_size(key)
-    key |> String.slice((keylength - 5)..keylength)
+    with {:ok, a} <- this |> __MODULE__.to_xdr_accountid(),
+         {:ok, key} <- a |> Stellar.XDR.Types.PublicKey.encode(),
+         keylength <- byte_size(key) do
+      key |> String.slice((keylength - 5)..keylength)
+    end
   end
 
   def verify(this, data, signature) do
@@ -114,17 +113,14 @@ defmodule Stellar.Base.KeyPair do
     end
   end
 
-  def master do
-    __MODULE__.from_raw_ed25519_seed(
-      Stellar.current_network()
-      |> Stellar.NetworkConfig.network_id()
-    )
+  def master() do
+    __MODULE__.from_raw_ed25519_seed(Stellar.current_network_id())
   end
 
   @doc """
   Generates a new keypair
   """
-  def random do
+  def random() do
     :crypto.strong_rand_bytes(32) |> __MODULE__.from_raw_ed25519_seed()
   end
 

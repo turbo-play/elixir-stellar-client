@@ -52,6 +52,8 @@ defmodule Stellar.Base.Memo do
     end
   end
 
+  def to_xdr(nil), do: nil
+
   def from_xdr({:MEMO_NONE, nil}), do: none()
   def from_xdr({:MEMO_ID, id}), do: id(id)
   def from_xdr({:MEMO_TEXT, text}), do: text(text)
