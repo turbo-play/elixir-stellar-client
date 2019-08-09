@@ -1,4 +1,4 @@
-# Stellar SDK for Elixir
+# Elixir Stellar SDK
 
 An improved [Stellar](https://stellar.org) SDK for [Elixir](https://elixir-lang.org/). This SDK was prepared by the [TurboPlay](https://turboplay.com) dev team as part of our contribution to the Stellar blockchain community. TurboPlay is developing the world's first personalized videogames marketplace with a rewarding loyalty system for players.
 
