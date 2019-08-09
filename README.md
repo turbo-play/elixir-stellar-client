@@ -16,7 +16,7 @@ by adding `stellar` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:stellar, "~> 0.3.0"}
+    {:stellar, github: "turbo-play/elixir-stellar-sdk"}
   ]
 end
 ```
@@ -35,26 +35,29 @@ Quick example on how to create a transaction, sign it and post it to the Stellar
     account =
       Stellar.Base.Account.new(
         "GAPLA4LXBR3ABZBCXLMWKVWIST4TMVIGXMKNB6RG3E3STZ356V2WIE6X",
-        "5737230198898695"
+        582_238_651_547_650
       )
 
     signer =
       Stellar.Base.KeyPair.from_secret("SA37TRR27NHLZJKWXOFNEBCNP5ZLKCGCDV7D565WBXYWDH3ACMHVIHMK")
 
-    envelope =
+    {:ok, transaction, updated_account} =
       account
       |> Stellar.Base.TransactionBuilder.new(memo: memo)
       |> Stellar.Base.TransactionBuilder.add_operation(
         Stellar.Base.Operation.payment(%{
           destination: "GASOCNHNNLYFNMDJYQ3XFMI7BYHIOCFW3GJEOWRPEGK2TDPGTG2E5EDW",
-          asset: Asset.native(),
+          asset: Stellar.Base.Asset.native(),
           amount: 600
         })
       )
       |> Stellar.Base.TransactionBuilder.set_timeout(100)
       |> Stellar.Base.TransactionBuilder.build()
-      |> Stellar.Transaction.sign(signer)
-      |> Stellar.Transaction.to_envelope()
+
+    envelope =
+      transaction
+      |> Stellar.Base.Transaction.sign(signer)
+      |> Stellar.Base.Transaction.to_envelope()
 
     with {:ok, xdr_envelope} <-
            envelope |> Stellar.XDR.Types.Transaction.TransactionEnvelope.encode(),
