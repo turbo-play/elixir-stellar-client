@@ -6,6 +6,7 @@ defmodule Stellar.Base.Operation do
     CreateAccountOp,
     PaymentOp,
     AllowTrustOp,
+    ChangeTrustOp,
     BumpSequenceOp,
     PathPaymentOp,
     OperationBody
@@ -51,6 +52,7 @@ defmodule Stellar.Base.Operation do
   defmacro type_payment, do: quote(do: "payment")
   defmacro type_path_payment, do: quote(do: "pathPayment")
   defmacro type_allow_trust, do: quote(do: "allowTrust")
+  defmacro type_change_trust, do: quote(do: "changeTrust")
   defmacro type_bump_sequence, do: quote(do: "bumpSequence")
 
   def unit(), do: 10_000_000
@@ -109,11 +111,17 @@ defmodule Stellar.Base.Operation do
   end
 
   def change_trust(opts) do
-    %__MODULE__{
-      type: "changeTrust",
-      limit: Map.get(opts, :limit, "9223372036854775807"),
-      sourceAccount: Map.get(opts, :source, nil)
-    }
+    cond do
+      Map.get(opts, :limit) && !is_valid_amount(opts.limit, true) ->
+        {:error, "invalid limit"}
+
+      true ->
+        %__MODULE__{
+          type: type_change_trust(),
+          limit: Map.get(opts, :limit, 9_223_372_036_854_775_807),
+          line: Map.get(opts, :asset, nil)
+        }
+    end
   end
 
   def create_account(opts) do
@@ -275,6 +283,16 @@ defmodule Stellar.Base.Operation do
   end
 
   def from_xdr(%{
+        body: {:CHANGE_TRUST, %ChangeTrustOp{} = change_trust_op}
+      }) do
+    %__MODULE__{
+      type: type_change_trust(),
+      line: change_trust_op.line |> Asset.from_xdr(),
+      limit: change_trust_op.limit
+    }
+  end
+
+  def from_xdr(%{
         body: {:BUMP_SEQUENCE, %BumpSequenceOp{} = bump_sequence_op}
       }) do
     %__MODULE__{
@@ -346,6 +364,23 @@ defmodule Stellar.Base.Operation do
            |> AllowTrustOp.new(),
          {:ok, allow_trust_body} <- OperationBody.new({:ALLOW_TRUST, allow_trust_op}),
          {:ok, operation} <- %XDROperation{body: allow_trust_body} |> XDROperation.new() do
+      operation
+    else
+      err -> err
+    end
+  end
+
+  def to_xdr(%{type: type} = this) when type == type_change_trust() do
+    with {:ok, change_trust_op} <-
+           %ChangeTrustOp{
+             line: this.line |> Asset.to_xdr(),
+             limit: this.limit
+           }
+           |> ChangeTrustOp.new(),
+         {:ok, change_trust_body} <-
+           OperationBody.new({:CHANGE_TRUST, change_trust_op}),
+         {:ok, operation} <-
+           %XDROperation{body: change_trust_body} |> XDROperation.new() do
       operation
     else
       err -> err

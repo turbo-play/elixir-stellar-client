@@ -94,7 +94,7 @@ defmodule Stellar.Base.KeyPair do
     with {:ok, a} <- this |> __MODULE__.to_xdr_accountid(),
          {:ok, key} <- a |> Stellar.XDR.Types.PublicKey.encode(),
          keylength <- byte_size(key) do
-      key |> String.slice((keylength - 5)..keylength)
+      key |> binary_part(keylength - 4, 4)
     end
   end
 
@@ -106,7 +106,8 @@ defmodule Stellar.Base.KeyPair do
     with signature <- Signer.sign(data, this |> __MODULE__.raw_secret_key()),
          hint <- this |> __MODULE__.signature_hint(),
          {:ok, dec_sign} <-
-           %DecoratedSignature{hint: hint, signature: signature} |> DecoratedSignature.new() do
+           %DecoratedSignature{hint: hint, signature: signature}
+           |> DecoratedSignature.new() do
       dec_sign
     else
       err -> err

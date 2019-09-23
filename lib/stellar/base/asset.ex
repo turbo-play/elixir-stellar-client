@@ -54,7 +54,7 @@ defmodule Stellar.Base.Asset do
   def from_xdr({:ASSET_TYPE_NATIVE, _}), do: native()
 
   def from_xdr({_, %{assetCode: code, issuer: issuer}}),
-    do: new(code |> String.trim_leading("\0"), issuer |> account_id_to_address())
+    do: new(code |> String.trim_trailing("\0"), issuer |> account_id_to_address())
 
   def to_xdr(asset) do
     asset_params =
@@ -67,7 +67,7 @@ defmodule Stellar.Base.Asset do
                  asset.issuer |> KeyPair.from_public_key() |> KeyPair.to_xdr_accountid(),
                {:ok, asset_details} <-
                  %AssetTypeCreditAlphaNum4{
-                   assetCode: asset.code |> String.pad_leading(4, "\0"),
+                   assetCode: asset.code |> String.pad_trailing(4, "\0"),
                    issuer: issuer
                  }
                  |> AssetTypeCreditAlphaNum4.new() do
@@ -75,10 +75,12 @@ defmodule Stellar.Base.Asset do
           end
 
         "credit_alphanum12" ->
-          with {:ok, asset_details} <-
+          with {:ok, issuer} <-
+                 asset.issuer |> KeyPair.from_public_key() |> KeyPair.to_xdr_accountid(),
+               {:ok, asset_details} <-
                  %AssetTypeCreditAlphaNum12{
-                   assetCode: asset.code |> String.pad_leading(12, "\0"),
-                   issuer: asset.issuer
+                   assetCode: asset.code |> String.pad_trailing(12, "\0"),
+                   issuer: issuer
                  }
                  |> AssetTypeCreditAlphaNum12.new() do
             {:ASSET_TYPE_CREDIT_ALPHANUM12, asset_details}

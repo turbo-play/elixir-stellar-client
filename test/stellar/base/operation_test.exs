@@ -33,7 +33,7 @@ defmodule Stellar.Base.Operation.Test do
       assert obj.startingBalance == sb
 
       assert %{body: {:CREATE_ACCOUNT, %{startingBalance: sb_response}}} = operation
-      assert sb_response |> Integer.to_string() == "10000000000"
+      assert sb_response = 10_000_000_000
     end
 
     test "fails create_account with invalid destination address" do
@@ -259,7 +259,62 @@ defmodule Stellar.Base.Operation.Test do
   end
 
   describe "change trust" do
-    test "create changeTrustOp" do
+    test "create op" do
+      asset =
+        Asset.new(
+          "USD",
+          "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7"
+        )
+
+      op =
+        Operation.change_trust(%{
+          asset: asset
+        })
+
+      xdr = op |> Operation.to_xdr()
+      obj = xdr |> Operation.from_xdr()
+      assert obj.type == "changeTrust"
+      assert asset == obj.line
+      assert obj.limit == 9_223_372_036_854_775_807
+    end
+
+    test "creates op with limit" do
+      asset =
+        Asset.new(
+          "USD",
+          "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7"
+        )
+
+      op =
+        Operation.change_trust(%{
+          asset: asset,
+          limit: 50
+        })
+
+      xdr = op |> Operation.to_xdr()
+      obj = xdr |> Operation.from_xdr()
+      assert obj.type == "changeTrust"
+      assert obj.limit == 50
+    end
+
+    test "deletes trustline" do
+      asset =
+        Asset.new(
+          "USD",
+          "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7"
+        )
+
+      op =
+        Operation.change_trust(%{
+          asset: asset,
+          limit: 0
+        })
+
+      xdr = op |> Operation.to_xdr()
+      obj = xdr |> Operation.from_xdr()
+      assert obj.type == "changeTrust"
+      assert asset == obj.line
+      assert obj.limit == 0
     end
   end
 
