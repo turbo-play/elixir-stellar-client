@@ -269,4 +269,177 @@ defmodule Stellar.Base.TransactionBuilder.Test do
       assert transaction.tx.timeBounds.maxTime == (DateTime.utc_now() |> DateTime.to_unix()) + 10
     end
   end
+
+  describe "SetOptions builder" do
+    setup do
+      %{
+        source: Account.new("GDRSG4KRN6SFM3C7NFRVB5Y3PR6OFEBY4TOP4EHLAAMZXRAWJMRBO4VE", 0)
+      }
+    end
+
+    test "build an inflation destination SetOption", %{source: source} do
+      {status, transaction, updated_account} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.set_options(%{
+            inflation_dest: "GDDVWKPMJKUH766SMOVKLDTZQCC4B7Q42YRRH7YBBDYDFPI7LWKJP55F"
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert status == :ok
+
+      assert List.first(transaction.operations).inflationDest ==
+               "GDDVWKPMJKUH766SMOVKLDTZQCC4B7Q42YRRH7YBBDYDFPI7LWKJP55F"
+
+      assert updated_account._accountId == source._accountId
+    end
+
+    test "build a set flags SetOption", %{source: source} do
+      {status, transaction, updated_account} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.set_options(%{
+            set_flags: 1
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert status == :ok
+      assert List.first(transaction.operations).setFlags == 1
+      assert updated_account._accountId == source._accountId
+    end
+
+    test "build a clear flags SetOption", %{source: source} do
+      {status, transaction, updated_account} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.set_options(%{
+            clear_flags: 1
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert status == :ok
+      assert List.first(transaction.operations).clearFlags == 1
+      assert updated_account._accountId == source._accountId
+    end
+
+    test "build a Master weight SetOption", %{source: source} do
+      {status, transaction, updated_account} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.set_options(%{
+            master_weight: 1
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert status == :ok
+      assert List.first(transaction.operations).masterWeight == 1
+      assert updated_account._accountId == source._accountId
+    end
+
+    test "build a Low threshold SetOption", %{source: source} do
+      {status, transaction, updated_account} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.set_options(%{
+            low_threshold: 1
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert status == :ok
+      assert List.first(transaction.operations).lowThreshold == 1
+      assert updated_account._accountId == source._accountId
+    end
+
+    test "build a Medium threshold SetOption", %{source: source} do
+      {status, transaction, updated_account} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.set_options(%{
+            med_threshold: 1
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert status == :ok
+      assert List.first(transaction.operations).medThreshold == 1
+      assert updated_account._accountId == source._accountId
+    end
+
+    test "build a High threshold SetOption", %{source: source} do
+      {status, transaction, updated_account} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.set_options(%{
+            high_threshold: 1
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert status == :ok
+      assert List.first(transaction.operations).highThreshold == 1
+      assert updated_account._accountId == source._accountId
+    end
+
+    test "build a Signer SetOption", %{source: source} do
+      {status, transaction, updated_account} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.set_options(%{
+            signer: %{key: "GDDVWKPMJKUH766SMOVKLDTZQCC4B7Q42YRRH7YBBDYDFPI7LWKJP55F", weight: 1}
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert status == :ok
+      assert is_map(List.first(transaction.operations).signer) == true
+      assert updated_account._accountId == source._accountId
+    end
+
+    test "build a Home domain SetOption", %{source: source} do
+      {status, transaction, updated_account} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.set_options(%{
+            home_domain: "kommit.co"
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert status == :ok
+      assert List.first(transaction.operations).homeDomain == "kommit.co"
+      assert updated_account._accountId == source._accountId
+    end
+
+    test "build a SetOption with multiple options", %{source: source} do
+      {status, transaction, updated_account} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.set_options(%{
+            home_domain: "kommit.co",
+            high_threshold: 1
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert status == :ok
+      assert List.first(transaction.operations).homeDomain == "kommit.co"
+      assert List.first(transaction.operations).highThreshold == 1
+      assert updated_account._accountId == source._accountId
+    end
+  end
 end
