@@ -120,7 +120,7 @@ defmodule Stellar.XDR.Types.Transaction do
 
   defmodule SetOptionsOp do
     use Struct,
-      inflationDest: AccountID,
+      inflationDest: OptionalAccountID,
       clearFlags: OptionalUInt32,
       setFlags: OptionalUInt32,
       masterWeight: OptionalUInt32,
@@ -194,7 +194,7 @@ defmodule Stellar.XDR.Types.Transaction do
   end
 
   defmodule MemoText do
-    use XDR.Type.String, max_len: 28 
+    use XDR.Type.String, max_len: 28
   end
 
   defmodule Memo do
