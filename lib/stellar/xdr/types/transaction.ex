@@ -34,6 +34,7 @@ defmodule Stellar.XDR.Types.Transaction do
     String64
   }
 
+  alias Stellar.XDR.Types.Asset, as: AllowAsset
   alias PublicKey, as: AccountID
 
   defmodule DecoratedSignature do
@@ -140,7 +141,7 @@ defmodule Stellar.XDR.Types.Transaction do
   defmodule AllowTrustOp do
     use Struct,
       trustor: AccountID,
-      asset: Asset,
+      asset: AllowAsset,
       authorize: Bool
   end
 
@@ -194,7 +195,7 @@ defmodule Stellar.XDR.Types.Transaction do
   end
 
   defmodule MemoText do
-    use XDR.Type.String, max_len: 28 
+    use XDR.Type.String, max_len: 28
   end
 
   defmodule Memo do

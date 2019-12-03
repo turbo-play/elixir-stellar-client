@@ -269,4 +269,53 @@ defmodule Stellar.Base.TransactionBuilder.Test do
       assert transaction.tx.timeBounds.maxTime == (DateTime.utc_now() |> DateTime.to_unix()) + 10
     end
   end
+
+  describe "Construct allow trust operation" do
+    setup do
+      %{
+        source: Account.new("GAYIVSXCNALI3D7P5ROBJ7Q6I4QN6APVRU7CONUP7U6IKJJRPGKYM4EY", 0),
+        trustor: "GDDVWKPMJKUH766SMOVKLDTZQCC4B7Q42YRRH7YBBDYDFPI7LWKJP55F"
+      }
+    end
+
+    test "Build Alphanum12 allow trust", %{source: source, trustor: trustor} do
+      asset_code = "DCHHCD"
+
+      {:ok, transaction, _} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.allow_trust(%{
+            trustor: trustor,
+            asset_code: asset_code,
+            authorize: true
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert List.first(transaction.operations).type == "allowTrust"
+      assert List.first(transaction.operations).trustor == trustor
+      assert List.first(transaction.operations).assetCode == asset_code
+    end
+
+    test "Build Alphanum4 allow trust", %{source: source, trustor: trustor} do
+      asset_code = "DCH"
+
+      {:ok, transaction, _} =
+        TransactionBuilder.new(source, [{:fee, 100}])
+        |> TransactionBuilder.add_operation(
+          Operation.allow_trust(%{
+            trustor: trustor,
+            asset_code: asset_code,
+            authorize: true
+          })
+        )
+        |> TransactionBuilder.set_timeout(10)
+        |> TransactionBuilder.build()
+
+      assert List.first(transaction.operations).type == "allowTrust"
+      assert List.first(transaction.operations).trustor == trustor
+      assert List.first(transaction.operations).assetCode == asset_code
+    end
+  end
 end

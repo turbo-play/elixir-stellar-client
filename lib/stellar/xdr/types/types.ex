@@ -1,6 +1,7 @@
 defmodule Stellar.XDR.Types do
   alias XDR.Type.{
     Enum,
+    Struct,
     FixedOpaque,
     HyperInt,
     HyperUint,
@@ -116,5 +117,40 @@ defmodule Stellar.XDR.Types do
   defmodule HmacSha256Mac do
     use XDR.Type.Struct,
       mac: Key32
+  end
+
+  defmodule AssetType do
+    use Enum,
+      ASSET_TYPE_NATIVE: 0,
+      ASSET_TYPE_CREDIT_ALPHANUM4: 1,
+      ASSET_TYPE_CREDIT_ALPHANUM12: 2
+  end
+
+  defmodule AssetCode4 do
+    use FixedOpaque, len: 4
+  end
+
+  defmodule AssetCode12 do
+    use FixedOpaque, len: 12
+  end
+
+  defmodule AssetTypeCreditAlphaNum4 do
+    use Struct,
+      assetCode4: AssetCode4
+  end
+
+  defmodule AssetTypeCreditAlphaNum12 do
+    use Struct,
+      assetCode12: AssetCode12
+  end
+
+  defmodule Asset do
+    use Union,
+      switch: AssetType,
+      cases: [
+        ASSET_TYPE_NATIVE: Void,
+        ASSET_TYPE_CREDIT_ALPHANUM4: AssetTypeCreditAlphaNum4,
+        ASSET_TYPE_CREDIT_ALPHANUM12: AssetTypeCreditAlphaNum12
+      ]
   end
 end

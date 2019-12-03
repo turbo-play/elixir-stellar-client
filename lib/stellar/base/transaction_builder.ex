@@ -76,8 +76,7 @@ defmodule Stellar.Base.TransactionBuilder do
 
   def build(this) do
     with updated_source_account <- Account.increment_sequence_number(this.source_account),
-         {:ok, xdr_transaction} <-
-           build_transaction_xdr(this, updated_source_account),
+         {:ok, xdr_transaction} <- build_transaction_xdr(this, updated_source_account),
          {:ok, xenv} <- build_transaction_envelope(xdr_transaction),
          %Transaction{} = tx <- Transaction.new(xenv) do
       {:ok, tx, updated_source_account}
