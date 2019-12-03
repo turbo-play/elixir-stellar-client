@@ -1,6 +1,6 @@
 defmodule Stellar.Base.Operation do
   # https://github.com/stellar/js-stellar-base/tree/master/src/operations
-  alias Stellar.Base.{KeyPair, Asset, StrKey}
+  alias Stellar.Base.{KeyPair, Asset, StrKey, Signer}
 
   alias Stellar.XDR.Types.Transaction.{
     CreateAccountOp,
@@ -346,7 +346,7 @@ defmodule Stellar.Base.Operation do
       lowThreshold: set_options_op.lowThreshold,
       medThreshold: set_options_op.medThreshold,
       highThreshold: set_options_op.highThreshold,
-      signer: set_options_op.signer,
+      signer: set_options_op.signer |> Signer.from_xdr(),
       homeDomain: set_options_op.homeDomain
     }
   end
@@ -479,7 +479,7 @@ defmodule Stellar.Base.Operation do
              lowThreshold: this.lowThreshold,
              medThreshold: this.medThreshold,
              highThreshold: this.highThreshold,
-             signer: this.signer,
+             signer: this.signer |> Signer.to_xdr(),
              homeDomain: this.homeDomain
            }
            |> SetOptionsOp.new(),
