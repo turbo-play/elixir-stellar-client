@@ -6,7 +6,8 @@ defmodule Stellar.XDR.Types.Transaction do
     Struct,
     Union,
     Void,
-    VariableArray
+    VariableArray,
+    String
   }
 
   alias Stellar.XDR.Types.{
@@ -118,6 +119,10 @@ defmodule Stellar.XDR.Types.Transaction do
     use Optional, for: Signer
   end
 
+  defmodule OptionalString do
+    use Optional, for: String
+  end
+
   defmodule SetOptionsOp do
     use Struct,
       inflationDest: OptionalAccountID,
@@ -127,7 +132,7 @@ defmodule Stellar.XDR.Types.Transaction do
       lowThreshold: OptionalUInt32,
       medThreshold: OptionalUInt32,
       highThreshold: OptionalUInt32,
-      homeDomain: OptionalString32,
+      homeDomain: OptionalString,
       signer: OptionalSigner
   end
 
