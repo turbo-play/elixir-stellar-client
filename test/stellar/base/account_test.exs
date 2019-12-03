@@ -24,8 +24,7 @@ defmodule Stellar.Base.Account.Test do
       assert Stellar.Base.Account.accountId(account) ==
                "GBBM6BKZPEHWYO3E3YKREDPQXMS4VK35YLNU7NFBRI26RAN7GI5POFBB"
 
-      assert Stellar.Base.Account.sequence_number(account) ==
-               100
+      assert Stellar.Base.Account.sequence_number(account) == 100
     end
   end
 
